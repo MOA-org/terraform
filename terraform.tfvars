@@ -7,3 +7,4 @@ force_destroy_bucket = true
 enable_ec2_example = true
 instance_type      = "t3.micro"
 ssh_allowed_cidr   = "0.0.0.0/0"
+ 
