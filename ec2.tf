@@ -1,11 +1,34 @@
+variable "vpc_id" {
+  description = "Existing VPC ID to deploy into. If null and use_default_vpc=true, default VPC is used."
+  type        = string
+  default     = null
+}
+
+variable "subnet_id" {
+  description = "Subnet ID for EC2 instance. If null, first subnet in selected VPC is used."
+  type        = string
+  default     = null
+}
+
+variable "use_default_vpc" {
+  description = "Allow fallback to account default VPC when vpc_id is not provided."
+  type        = bool
+  default     = false
+}
+
+locals {
+  selected_vpc_id = var.vpc_id != null ? var.vpc_id : try(data.aws_vpc.default[0].id, null)
+}
+
 data "aws_vpc" "default" {
+  count   = var.vpc_id == null && var.use_default_vpc ? 1 : 0
   default = true
 }
 
-data "aws_subnets" "default" {
+data "aws_subnets" "selected" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+    values = [local.selected_vpc_id]
   }
 }
 
@@ -28,7 +51,7 @@ resource "aws_security_group" "demo_web_sg" {
   count       = var.enable_ec2_example ? 1 : 0
   name        = "${var.project_name}-${var.environment}-demo-web-sg"
   description = "Allow HTTP and SSH for demo instance"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = local.selected_vpc_id
 
   ingress {
     description = "HTTP"
@@ -62,7 +85,7 @@ resource "aws_instance" "demo_web" {
   count                  = var.enable_ec2_example ? 1 : 0
   ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = var.instance_type
-  subnet_id              = data.aws_subnets.default.ids[0]
+  subnet_id              = coalesce(var.subnet_id, data.aws_subnets.selected.ids[0])
   vpc_security_group_ids = [aws_security_group.demo_web_sg[0].id]
 
   user_data = <<-EOT
