@@ -39,3 +39,21 @@ variable "ssh_allowed_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "vpc_id" {
+  description = "Existing VPC ID to deploy into. If null, default VPC can be used when use_default_vpc=true."
+  type        = string
+  default     = null
+}
+
+variable "subnet_id" {
+  description = "Subnet ID for EC2 demo instance. If null, first subnet in selected VPC is used."
+  type        = string
+  default     = null
+}
+
+variable "use_default_vpc" {
+  description = "If true and vpc_id is null, use account default VPC."
+  type        = bool
+  default     = false
+}
