@@ -1,28 +1,10 @@
-variable "vpc_id" {
-  description = "Existing VPC ID to deploy into. If null and use_default_vpc=true, default VPC is used."
-  type        = string
-  default     = null
-}
-
-variable "subnet_id" {
-  description = "Subnet ID for EC2 instance. If null, first subnet in selected VPC is used."
-  type        = string
-  default     = null
-}
-
-variable "use_default_vpc" {
-  description = "Allow fallback to account default VPC when vpc_id is not provided."
-  type        = bool
-  default     = false
+data "aws_vpc" "default" {
+  count   = var.vpc_id == null && var.use_default_vpc ? 1 : 0
+  default = true
 }
 
 locals {
   selected_vpc_id = var.vpc_id != null ? var.vpc_id : try(data.aws_vpc.default[0].id, null)
-}
-
-data "aws_vpc" "default" {
-  count   = var.vpc_id == null && var.use_default_vpc ? 1 : 0
-  default = true
 }
 
 data "aws_subnets" "selected" {
